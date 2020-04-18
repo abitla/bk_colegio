@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,6 +34,7 @@ public class EstudianteController {
 	@Autowired
 	private IEstudianteService service;
 	
+	
 	@PostMapping
 	public Mono<ResponseEntity<Estudiante>> registrar(@Valid @RequestBody Estudiante estudiante){
 		
@@ -46,16 +48,23 @@ public class EstudianteController {
 	
 	@GetMapping
 	public Mono<ResponseEntity<Flux<Estudiante>>> listar(){
-		Flux<Estudiante> estudiantes = service.listar();
-		estudiantes = estudiantes.parallel()
-				.runOn(Schedulers.elastic())
-				.flatMap(p -> service.listarPorId(p.getId()))
-				.ordered((p1, p2) -> p2.getEdad().intValue() - p1.getEdad().intValue());
+		Flux<Estudiante> estudiantes = service.listar().sort(
+				(p1, p2) -> p2.getEdad().intValue() - p1.getEdad().intValue());
 		return Mono.just(ResponseEntity.ok()
 				  						.contentType(MediaType.APPLICATION_STREAM_JSON)
-				  						.body(estudiantes));
-		
-				
+				  						.body(estudiantes));			
+	}
+	
+	@GetMapping("/paralelamente")
+	public Mono<ResponseEntity<Flux<Estudiante>>> listarParalelamente(){
+		Flux<Estudiante> estudiantes = service.listar()
+											  .parallel()
+											  .runOn(Schedulers.elastic())
+											  .flatMap(p -> service.listarPorId(p.getId()))
+											  .ordered((p1, p2) -> p2.getEdad().intValue() - p1.getEdad().intValue());
+		return Mono.just(ResponseEntity.ok()
+				  						.contentType(MediaType.APPLICATION_STREAM_JSON)
+				  						.body(estudiantes));			
 	}
 	
 	@GetMapping("/{id}")

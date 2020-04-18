@@ -21,6 +21,7 @@ public class RouterConfig {
 	@Bean
 	public RouterFunction<ServerResponse> rutasEstudiante(EstudianteHandler handler){
 		return route(GET("/v2/estudiante"), handler::listar)
+				.andRoute(GET("v2/estudiante/paralelamente"), handler::listarParalelamente)
 				.andRoute(GET("/v2/estudiante/{id}"), handler::listarPorId)
 				.andRoute(POST("/v2/estudiante"), handler::registrar)
 				.andRoute(PUT("/v2/estudiante"), handler::modificar)

@@ -50,8 +50,12 @@ public class WebSecurityConfig {
 				.pathMatchers(HttpMethod.OPTIONS).permitAll()				
 				.pathMatchers("/login").permitAll()
 				.pathMatchers("/v2/login").permitAll()
-				//.pathMatchers("/platos/**").permitAll()
 				.pathMatchers("/json/**").permitAll()
+				.pathMatchers(HttpMethod.GET, "/v1/estudiante").hasAuthority("USER")
+				.pathMatchers(HttpMethod.GET, "/v1/curso").hasAuthority("USER")
+				.pathMatchers("/v1/estudiante/**").hasAuthority("ADMIN")
+				.pathMatchers("/v1/curso/**").hasAuthority("ADMIN")
+				.pathMatchers("/v1/matricula/**").hasAuthority("ADMIN")
 				.anyExchange().authenticated()
 				.and().build();
 	}

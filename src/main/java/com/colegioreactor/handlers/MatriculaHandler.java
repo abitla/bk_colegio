@@ -6,6 +6,7 @@ import java.net.URI;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -17,6 +18,7 @@ import com.colegioreactor.validators.RequestValidator;
 import reactor.core.publisher.Mono;
 
 @Component
+@PreAuthorize("hasAuthority('ADMIN')")
 public class MatriculaHandler {
 
 	@Autowired

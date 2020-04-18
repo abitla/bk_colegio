@@ -6,6 +6,7 @@ import java.net.URI;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -17,6 +18,7 @@ import com.colegioreactor.validators.RequestValidator;
 import reactor.core.publisher.Mono;
 
 @Component
+@PreAuthorize("hasAuthority('ADMIN')")
 public class CursoHandler {
 
 	@Autowired
@@ -24,7 +26,8 @@ public class CursoHandler {
 	
 	@Autowired
 	private RequestValidator validadorGeneral;
-		
+	
+	@PreAuthorize("hasAuthority('USER')")
 	public Mono<ServerResponse> listar(ServerRequest req){
 		return ServerResponse.ok()
 				.contentType(MediaType.APPLICATION_STREAM_JSON)
@@ -48,47 +51,12 @@ public class CursoHandler {
 	
 	public Mono<ServerResponse> registrar(ServerRequest req){		
 		Mono<Curso> CursoMono = req.bodyToMono(Curso.class);
-		
-		//CON VALIDACION MANUAL
-		/*return CursoMono.flatMap(p -> {
-			Errors errores = new BeanPropertyBindingResult(p, Curso.class.getName());
-			validador.validate(p, errores);
-			
-			if(errores.hasErrors()) {
-				return Flux.fromIterable(errores.getFieldErrors())
-						.map(error -> new ValidacionDTO(error.getField(), error.getDefaultMessage()))
-						.collectList()
-						.flatMap(listaErrores -> {
-							return ServerResponse.badRequest()
-									.contentType(MediaType.APPLICATION_STREAM_JSON)
-									.body(fromValue(listaErrores));
-						});
-			}else {
-				return service.registrar(p)
-						.flatMap(x -> ServerResponse
-								.created(URI.create(req.uri().toString().concat("/").concat(x.getId())))
-								.contentType(MediaType.APPLICATION_STREAM_JSON)
-								.body(fromValue(x))
-								);								
-			}
-		});*/
-		
-		//CON VALIDACION AUTOMATICA
 		return CursoMono.flatMap(this.validadorGeneral::validar)				
 		.flatMap(service::registrar)
 				.flatMap(p -> ServerResponse.created(URI.create(req.uri().toString().concat("/").concat(p.getId())))
 								.contentType(MediaType.APPLICATION_STREAM_JSON)
 								.body(fromValue(p))
 						);
-		
-		//SIN VALIDACION
-		/*return CursoMono.flatMap(p -> {
-			return service.registrar(p);
-		})
-			.flatMap(p -> ServerResponse.created(URI.create(req.uri().toString().concat("/").concat(p.getId())))
-			.contentType(MediaType.APPLICATION_STREAM_JSON)
-			.body(fromValue(p))
-		);*/
 		
 	}
 	
